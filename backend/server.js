@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/database");
+const { sendMailer } = require("./utils/mailSender");
+
 
 // Load env vars
 dotenv.config();
@@ -15,6 +17,44 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+
+// calling nodemailer testing
+sendMailer(
+  {
+    // to: "dhairyaadroja3391@gmail.com",
+    subject : "",
+    html : `<div style="font-family: Arial, sans-serif; line-height: 1.6;">
+  <h2 style="color: #4A90E2;">🌟 Skill Swap – Collaboration Opportunity</h2>
+
+  <p>Hi there 👋,</p>
+
+  <p>
+    I hope you're doing great! I'm reaching out from <strong>Skill Swap</strong> to explore a potential 
+    collaboration 🤝. We believe your skills could be a perfect match for our community.
+  </p>
+
+  <p>
+    If you're interested, feel free to reply to this email or log in to the platform to check your 
+    latest requests and updates ✨.
+  </p>
+
+  <p>
+    Looking forward to connecting with you!<br>
+    Warm regards,<br>
+    <strong>Skill Swap Team</strong> 💼
+  </p>
+
+  <hr style="margin-top: 30px;">
+
+  <p style="font-size: 12px; color: gray;">
+    📩 This is an automated email. If you received it by mistake, please ignore it.
+  </p>
+</div>
+`
+  }
+)
+
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");

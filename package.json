@@ -3,7 +3,13 @@
   "private": true,
   "version": "1.0.0",
   "description": "SkillSwap - A skill exchange platform connecting people to learn and teach",
-  "keywords": ["skill-exchange", "learning", "teaching", "platform", "monorepo"],
+  "keywords": [
+    "skill-exchange",
+    "learning",
+    "teaching",
+    "platform",
+    "monorepo"
+  ],
   "author": "SkillSwap Team",
   "license": "MIT",
   "scripts": {
@@ -32,5 +38,8 @@
   "bugs": {
     "url": "https://github.com/Dhairya3391/skillswap/issues"
   },
-  "homepage": "https://github.com/Dhairya3391/skillswap#readme"
+  "homepage": "https://github.com/Dhairya3391/skillswap#readme",
+  "dependencies": {
+    "otp-generator": "^4.0.1"
+  }
 }

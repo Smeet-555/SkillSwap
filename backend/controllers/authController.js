@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mailSender = require("../utils/mailSender");
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -12,20 +13,83 @@ const generateToken = (user) => {
   );
 };
 
-// Register a new user
+// Register a new user (with OTP verification)
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, otp } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !password || !otp) {
+      return res.status(400).json({ 
+        message: "All fields are required (name, email, password, otp)" 
+      });
+    }
+    
+    // Check if user already exists
     const userExists = await User.findOne({ email });
-    if (userExists)
+    if (userExists) {
       return res.status(400).json({ message: "Email already in use" });
+    }
 
+    // Verify OTP
+    const OTP = require("../models/otpModel");
+    console.log("🔍 Checking OTP for email:", email, "OTP:", otp);
+    
+    const otpRecord = await OTP.findOne({ email, otp }).sort({ createdAt: -1 });
+    console.log("📋 OTP Record found:", otpRecord ? "YES" : "NO");
+    
+    if (!otpRecord) {
+      // Check if there's any OTP for this email
+      const anyOtp = await OTP.findOne({ email }).sort({ createdAt: -1 });
+      console.log("📧 Any OTP for this email:", anyOtp ? `YES (OTP: ${anyOtp.otp})` : "NO");
+      
+      return res.status(400).json({ 
+        message: "Invalid or expired OTP. Please request a new OTP." 
+      });
+    }
+    
+    console.log("✅ OTP verified successfully");
+
+    // OTP is valid, proceed with registration
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashedPassword });
 
+    // Delete used OTP
+    await OTP.deleteMany({ email });
+
     const token = generateToken(user);
-    res.status(201).json({ token, user });
+
+    // Send welcome email
+    try {
+      await mailSender(
+        email,
+        "Welcome to SkillSwap!",
+        `<h1>Welcome ${name}!</h1>
+         <p>Thank you for registering with SkillSwap.</p>
+         <p>Your account has been successfully created and verified.</p>
+         <p>Start exploring skills and connect with others!</p>`
+      );
+      console.log("Welcome email sent to:", email);
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError.message);
+    }
+
+    res.status(201).json({ 
+      success: true,
+      message: "Registration successful",
+      token, 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin
+      }
+    });
+    
+    console.log("User registered successfully:", email);
+    
   } catch (err) {
+    console.error("Registration error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -54,6 +118,19 @@ exports.login = async (req, res) => {
   // Store refreshToken in DB
   user.refreshTokens.push(refreshToken);
   await user.save();
+
+  // mail for notification of login of a user
+  try {
+    await mailSender(
+      email,
+      "Login Notification - SkillSwap",
+      `<h1>Hello ${user.name}!</h1>
+       <p>You have successfully logged in to your SkillSwap account.</p>
+       <p>If this wasn't you, please secure your account immediately.</p>`
+    );
+  } catch (emailError) {
+    console.error("Failed to send login notification:", emailError.message);
+  }
 
   res.status(200).json({
     token: accessToken,

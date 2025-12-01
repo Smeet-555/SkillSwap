@@ -61,12 +61,14 @@ const userRoutes = require("./routes/users");
 const swapRoutes = require("./routes/swaps");
 const feedbackRoutes = require("./routes/feedback");
 const adminRoutes = require("./routes/admin");
+const otpRoutes = require("./routes/otpRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/swaps", swapRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/otp", otpRoutes);
 
 // Test route
 app.get("/", (req, res) => {
